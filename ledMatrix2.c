@@ -4,6 +4,7 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include <avr/interrupt.h>
 
 #define CLK_HIGH()  PORTB |= (1<<PB5)
 #define CLK_LOW()   PORTB &= ~(1<<PB5)
@@ -20,6 +21,9 @@
 #define LIGHT_BRIGHT 8
 
 uint8_t display[8], displays[8][4];
+
+uint8_t BLINK_FACTOR = 2, BLINK_STATE = 0;
+uint8_t INVERT = 0;
 
 uint8_t smile[8] = {
         0b00000010,
@@ -76,7 +80,7 @@ uint8_t middle[8] = {
 };
 
 
-void spi_send(uint8_t data)
+void spiSend(uint8_t data)
 {
 	uint8_t i;
 
@@ -92,13 +96,13 @@ void spi_send(uint8_t data)
     
 }
 
-void max7219_writec(uint8_t high_byte, uint8_t low_byte)
+void writeLED(uint8_t high_byte, uint8_t low_byte)
 {
-	spi_send(high_byte);
-	spi_send(low_byte);
+	spiSend(high_byte);
+	spiSend(low_byte);
 }
 
-void max7219_clear(void)
+void clearLED(void)
 {
 	uint8_t i, j;
 	for (i = 0; i < 8; i++)
@@ -106,41 +110,41 @@ void max7219_clear(void)
 		CS_LOW();
 		for(j = 0; j < 4; j++)
 		{
-			max7219_writec(i+1, 0);
+			writeLED(i+1, 0);
 		}
 		CS_HIGH();
 	}
 }
 
-void max7219_init(void)
+void initLED(void)
 {
 	uint8_t i, n = 4;
     INIT_PORT();
     
     CS_LOW();
-    for(i = 0; i<n; i++) max7219_writec(0x09, 0);
+    for(i = 0; i<n; i++) writeLED(0x09, 0);
     CS_HIGH();
     
     CS_LOW();
-    for(i = 0; i<n; i++) max7219_writec(0x0A, LIGHT_BRIGHT);
+    for(i = 0; i<n; i++) writeLED(0x0A, LIGHT_BRIGHT);
     CS_HIGH();
     
     CS_LOW();
-    for(i = 0; i<n; i++) max7219_writec(0x0B, 7);
+    for(i = 0; i<n; i++) writeLED(0x0B, 7);
     CS_HIGH();
     
     CS_LOW();
-    for(i = 0; i<n; i++) max7219_writec(0x0C, 1);
+    for(i = 0; i<n; i++) writeLED(0x0C, 1);
     CS_HIGH();
     
     CS_LOW();
-    for(i = 0; i<n; i++) max7219_writec(0x0F, 0);
+    for(i = 0; i<n; i++) writeLED(0x0F, 0);
     CS_HIGH();
     
-    max7219_clear();
+    clearLED();
 }
 
-void update_displays(void)
+void updateLED(void)
 {
 	uint8_t i, j;
 	
@@ -149,14 +153,14 @@ void update_displays(void)
 		CS_LOW();
 		for(j = 0; j < 4; j++)
 		{
-			spi_send(i + 1);
-			spi_send(displays[i][j]);
+			spiSend(i + 1);
+			spiSend(displays[i][j]);
 		}
 		CS_HIGH();
 	}
 }
 
-void images(uint8_t im0[8], uint8_t im1[8], uint8_t im2[8], uint8_t im3[8], uint8_t inverse)
+void sendLED(uint8_t im0[8], uint8_t im1[8], uint8_t im2[8], uint8_t im3[8], uint8_t inverse)
 {
 	uint8_t i;
 	for (i = 0; i < 8; i++)
@@ -177,60 +181,51 @@ void images(uint8_t im0[8], uint8_t im1[8], uint8_t im2[8], uint8_t im3[8], uint
 			displays[i][3] = im3[i];
 		}
 	}
+	
+	updateLED();
 }
 
 void leftLight(void)
 {
-	images(left, middle, left, middle, 0);
-	update_displays();
-	_delay_ms(LIGHT_DELAY);
-	
-	images(left, middle, left, middle, 1);
-	update_displays();
-	_delay_ms(LIGHT_DELAY);
+	sendLED(left, middle, left, middle, INVERT);
+	INVERT ^= 1;
 }
 
 void rightLight(void)
 {
-	images(middle, right, middle, right, 0);
-	update_displays();
-	_delay_ms(LIGHT_DELAY);
-	
-	images(middle, right, middle, right, 1);
-	update_displays();
-	_delay_ms(LIGHT_DELAY);
+	sendLED(middle, right, middle, right, INVERT);
+	INVERT ^= 1;
 }
 
 void bothLights(void)
 {
-	images(left, middle, middle, right, 0);
-	update_displays();
-	_delay_ms(LIGHT_DELAY);
-	
-	images(left, middle, middle, right, 1);
-	update_displays();
-	_delay_ms(LIGHT_DELAY);
+	sendLED(left, middle, middle, right, INVERT);
+	INVERT ^= 1;
 }
+
+
+
+
 
 int main(void)
 {
-	max7219_init();
-	
-	uint8_t i, n = 5;
-	
+    TIMSK0 |= (1 << OCIE0A); 
+    sei();
+
+    TCCR0B |= (1 << CS02) | (1 << CS00);
+
+	initLED();
+		
 	while(1)
 	{
-		for(i = 0; i < n; i++)
-		{
-			leftLight();
-		}
-		for(i = 0; i < n; i++)
-		{
-			rightLight();
-		}
-		for(i = 0; i < n; i++)
-		{
-			bothLights();
-		}
+		
 	}
+}
+
+
+ISR (TIMER0_COMPA_vect)
+{
+	if(BLINK_STATE % BLINK_FACTOR) leftLight();
+	
+	BLINK_STATE += 1;
 }
