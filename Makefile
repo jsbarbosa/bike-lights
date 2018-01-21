@@ -15,7 +15,7 @@
 
 # parameters (change this stuff accordingly)
 # project name
-PRJ = ledMatrix2
+PRJ = main
 # avr mcu
 MCU = atmega328p
 # mcu clock frequency
@@ -38,7 +38,7 @@ EFU = 0x05
 SRC = $(PRJ).cpp
 # where to look for external libraries (consisting of .c/.cpp files and .h files)
 # e.g. EXT = ../../EyeToSee ../../YouSART
-EXT = ./headers #.
+EXT = ./headers .
 
 
 #################################################################################################
@@ -64,7 +64,7 @@ CFILES    = $(filter %.c, $(SRC))
 EXTC     := $(foreach dir, $(EXT), $(wildcard $(dir)/*.c))
 CPPFILES  = $(filter %.cpp, $(SRC))
 EXTCPP   := $(foreach dir, $(EXT), $(wildcard $(dir)/*.cpp))
-OBJ       = $(CFILES:.c=.o) $(EXTC:.c=.o) $(CPPFILES:.cpp=.o) $(EXTCPP:.cpp=.o)
+OBJ       = $(CFILES:.c=.o) $(EXTC:.c=.o) #$(CPPFILES:.cpp=.o) $(EXTCPP:.cpp=.o)
 
 # user targets
 # compile all files
