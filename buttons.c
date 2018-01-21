@@ -21,28 +21,9 @@ void setupInterrupts(void)
 void sleepNow(void)
 {
 	cli();
+	PORTB &= ~(1 << PB3);
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	sleep_enable();
 	sei();
 	sleep_cpu();
-}
-
-void mainHandler(void)
-{
-	cli();
-	DDRB = 0xFF;
-	//~ if((INTERRUPT_PIN & (1 << MAIN_NUMBER)) == 0)
-	//~ {
-		PORTB ^= (1 << PB3);
-	//~ }
-	sei();
-}
-
-void leftHandler(void)
-{
-	//~ DDRB = 0xFF;
-	if((INTERRUPT_PIN & (1 << LEFT_NUMBER)) == 0)
-	{
-		PORTB |= (1 << PB4);
-	}
 }

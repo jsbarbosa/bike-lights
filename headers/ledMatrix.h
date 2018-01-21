@@ -25,9 +25,10 @@ void updateLED(void);
 void leftLight(void);
 void rightLight(void);
 void bothLights(void);
+void turnLEDSOn(void);
+void turnLEDSOff(void);
 void initLEDTimer(void);
 void stopLEDTimer(void);
-
 
 void spiSend(uint8_t data);
 void writeLED(uint8_t high_byte, uint8_t low_byte);

@@ -10,15 +10,10 @@ int main(void)
 	DDRB = 0xFF;
 	initLED();
 	setupInterrupts();
-	initLEDTimer();
 	
-	sei();
-		
 	while(1)
 	{
-		//~ if((TCCR0B & (1 << CS00)) == 0)	sleepNow();
-		
-		//~ leftHandler();
+		if((TCCR0B & (1 << CS00)) == 0)	sleepNow();
 	}
 	return 0;
 }
@@ -37,7 +32,7 @@ ISR(LIGHT_VECT)
 	uint8_t left, right, both, mainl;
 	getState(&left, &right, &both, &mainl);
 	
-	if(left | right | both | mainl)
+	if(left | right | both )
 	{
 		BLINK_STATE += 1;
 		if(BLINK_STATE % BLINK_FACTOR)
@@ -45,23 +40,43 @@ ISR(LIGHT_VECT)
 			if(both) bothLights();
 			else if(left) leftLight();
 			else if(right) rightLight();
-			else if(mainl) mainLight();
 		}
 	}
-	//else stopLEDTimer();
+	
+	/*else
+	{
+		turnLEDSOff();
+		//~ clearLED();
+		
+	}*/
 }
 
 ISR(INTERRUPT_VECT)
 {	
-	PORTB ^= (1 << PB3);
+	sleep_disable();
+	PORTB |= (1 << PB3);
 	
 	uint8_t left, right, both, mainl;
 	getState(&left, &right, &both, &mainl);
 	
-	if((left | right | both | mainl) == 0)
+	if((left | right | both))
 	{
-		clearLED();
+		turnLEDSOn();
+		initLEDTimer();
+		TIFR0 |= (1 << TOV0);
 	}
-	//~ sleep_disable();
-	//~ mainHandler();
+	
+	else if(mainl)
+	{
+		turnLEDSOn();
+		stopLEDTimer();
+		mainLight();
+	}
+	
+	else
+	{
+		turnLEDSOff();
+		//~ clearLED();
+		stopLEDTimer();
+	}
 }

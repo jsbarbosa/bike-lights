@@ -32,37 +32,60 @@ uint8_t SAD[8] = {
 
 uint8_t LEFT[8] =  {
         0b00011000,
-        0b00111000,
-        0b01111111,
-        0b11111111,
-        0b01111111,
-        0b00111111,
+        0b00110000,
+        0b01100000,
+        0b11000000,
+        0b11000000,
+        0b01100000,
+        0b00110000,
         0b00011000,
-        0b00001000,
 };
 
 uint8_t RIGHT[8] =  {
         0b00011000,
-        0b00011100,
-        0b11111110,
-        0b11111111,
-        0b11111110,
-        0b11111100,
+        0b00001100,
+        0b00000110,
+        0b00000011,
+        0b00000011,
+        0b00000110,
+        0b00001100,
         0b00011000,
-        0b00010000,
 };
 
-uint8_t MIDDLE[8] = {
+uint8_t ALERT[8] = {
+		0b00011000,
+        0b00111100,
+        0b01111110,
+        0b11111111,
+        0b11111111,
+        0b01111110,
+        0b00111100,
+        0b00011000,
+};
+
+uint8_t LINES[8] = 
+{
 		0b00000000,
-        0b00000000,
-        0b11111111,
-        0b11111111,
         0b11111111,
         0b11111111,
         0b00000000,
+        0b00000000,
+        0b11111111,
+        0b11111111,
         0b00000000,
 };
 
+uint8_t BLANCK[8] = 
+{
+		0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+};
 
 void spiSend(uint8_t data)
 {
@@ -100,6 +123,22 @@ void clearLED(void)
 	}
 }
 
+void turnLEDSOn(void)
+{
+	uint8_t i;
+	CS_LOW();
+    for(i = 0; i<4; i++) writeLED(0x0C, 1);
+    CS_HIGH();
+}
+
+void turnLEDSOff(void)
+{
+	uint8_t i;
+	CS_LOW();
+    for(i = 0; i<4; i++) writeLED(0x0C, 0);
+    CS_HIGH();
+}
+
 void initLED(void)
 {
 	uint8_t i, n = 4;
@@ -117,9 +156,7 @@ void initLED(void)
     for(i = 0; i<n; i++) writeLED(0x0B, 7);
     CS_HIGH();
     
-    CS_LOW();
-    for(i = 0; i<n; i++) writeLED(0x0C, 1);
-    CS_HIGH();
+    turnLEDSOn();
     
     CS_LOW();
     for(i = 0; i<n; i++) writeLED(0x0F, 0);
@@ -173,26 +210,28 @@ void sendLED(uint8_t im0[8], uint8_t im1[8], uint8_t im2[8], uint8_t im3[8], uin
 
 void rightLight(void)
 {
-	sendLED(LEFT, MIDDLE, LEFT, MIDDLE, INVERT);
+	//~ sendLED(LEFT, MIDDLE, LEFT, MIDDLE, INVERT);
+	sendLED(LEFT, LEFT, LEFT, LEFT, INVERT);
 	INVERT ^= 1;
 }
 
 void leftLight(void)
 {
-	sendLED(MIDDLE, RIGHT, MIDDLE, RIGHT, INVERT);
+	//~ sendLED(MIDDLE, RIGHT, MIDDLE, RIGHT, INVERT);
+	sendLED(RIGHT, RIGHT, RIGHT, RIGHT, INVERT);
 	INVERT ^= 1;
 }
 
 void bothLights(void)
 {
-	sendLED(LEFT, MIDDLE, MIDDLE, RIGHT, INVERT);
+	sendLED(ALERT, LEFT, RIGHT, ALERT, INVERT);
 	INVERT ^= 1;
 }
 
 void mainLight(void)
 {
-	sendLED(SMILE, SMILE, SMILE, SMILE, INVERT);
-	INVERT ^= 1;
+	
+	sendLED(LINES, LINES, LINES, LINES, 0);
 }
 
 void initLEDTimer(void)
