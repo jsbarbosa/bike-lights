@@ -7,6 +7,7 @@
 #include "headers/ledMatrix.h"
 
 uint8_t INVERT = 0;
+uint8_t ARE_LEDS_ON = 0;
 uint8_t LED_MATRICES[8][4];
 
 uint8_t SMILE[8] = {
@@ -91,6 +92,7 @@ void spiSend(uint8_t data)
 {
 	uint8_t i;
 
+	cli();
 	for (i = 0; i < 8; i++, data <<= 1)
 	{
 		CLK_LOW();
@@ -100,13 +102,15 @@ void spiSend(uint8_t data)
 		
 		CLK_HIGH();
 	}
-    
+    sei();
 }
 
 void writeLED(uint8_t high_byte, uint8_t low_byte)
 {
+	cli();
 	spiSend(high_byte);
 	spiSend(low_byte);
+	sei();
 }
 
 void clearLED(void)
@@ -126,17 +130,25 @@ void clearLED(void)
 void turnLEDSOn(void)
 {
 	uint8_t i;
-	CS_LOW();
-    for(i = 0; i<4; i++) writeLED(0x0C, 1);
-    CS_HIGH();
+	if(ARE_LEDS_ON == 0)
+	{
+		CS_LOW();
+		for(i = 0; i<4; i++) writeLED(0x0C, 1);
+		CS_HIGH();
+	}
+    ARE_LEDS_ON = 1;
 }
 
 void turnLEDSOff(void)
 {
 	uint8_t i;
-	CS_LOW();
-    for(i = 0; i<4; i++) writeLED(0x0C, 0);
-    CS_HIGH();
+	if(ARE_LEDS_ON)
+	{
+		CS_LOW();
+		for(i = 0; i<4; i++) writeLED(0x0C, 0);
+		CS_HIGH();
+	}
+    ARE_LEDS_ON = 0;
 }
 
 void initLED(void)
@@ -167,8 +179,8 @@ void initLED(void)
 
 void updateLED(void)
 {
-	uint8_t i, j;
-	
+	turnLEDSOn();
+	uint8_t i, j;	
 	for(i = 0; i < 8; i++)
 	{
 		CS_LOW();

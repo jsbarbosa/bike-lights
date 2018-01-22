@@ -12,7 +12,7 @@
 
 #define INIT_PORT() DDRB |= (1<<PB2) | (1<<PB4) | (1<<PB5)
 
-#define LIGHT_BRIGHT 8
+#define LIGHT_BRIGHT 2
 
 #define LIGHT_VECT TIMER0_COMPB_vect
 

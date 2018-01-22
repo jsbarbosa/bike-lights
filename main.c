@@ -3,80 +3,26 @@
 #include "headers/buttons.h"
 #include "headers/ledMatrix.h"
 
-uint8_t BLINK_STATE = 0;
 
 int main(void)
 {
-	DDRB = 0xFF;
 	initLED();
+	initLEDTimer();
 	setupInterrupts();
+    
+    sei();
 	
 	while(1)
 	{
-		if((TCCR0B & (1 << CS00)) == 0)	sleepNow();
 	}
 	return 0;
 }
 
-void getState(uint8_t *left, uint8_t *right, uint8_t *both, uint8_t *mainl)
-{
-	*left = 0; *right = 0; *both = 0; *mainl = 0;
-	if((INTERRUPT_PIN & (1 << LEFT_NUMBER)) == 0) *left = 1;
-	if((INTERRUPT_PIN & (1 << RIGHT_NUMBER)) == 0) *right = 1;
-	if((INTERRUPT_PIN & (1 << BOTH_NUMBER)) == 0) *both = 1;
-	if((INTERRUPT_PIN & (1 << MAIN_NUMBER)) == 0) *mainl = 1;
-}
 
-ISR(LIGHT_VECT)
-{
-	uint8_t left, right, both, mainl;
-	getState(&left, &right, &both, &mainl);
-	
-	if(left | right | both )
-	{
-		BLINK_STATE += 1;
-		if(BLINK_STATE % BLINK_FACTOR)
-		{
-			if(both) bothLights();
-			else if(left) leftLight();
-			else if(right) rightLight();
-		}
-	}
-	
-	/*else
-	{
-		turnLEDSOff();
-		//~ clearLED();
-		
-	}*/
-}
 
-ISR(INTERRUPT_VECT)
-{	
-	sleep_disable();
-	PORTB |= (1 << PB3);
-	
-	uint8_t left, right, both, mainl;
-	getState(&left, &right, &both, &mainl);
-	
-	if((left | right | both))
-	{
-		turnLEDSOn();
-		initLEDTimer();
-		TIFR0 |= (1 << TOV0);
-	}
-	
-	else if(mainl)
-	{
-		turnLEDSOn();
-		stopLEDTimer();
-		mainLight();
-	}
-	
-	else
-	{
-		turnLEDSOff();
-		//~ clearLED();
-		stopLEDTimer();
-	}
-}
+
+
+
+
+
+
