@@ -19,9 +19,9 @@
 #define BOTH_NUMBER PD3
 #define BOTH_PCINT PCINT19
 
-#define POWER_ADD DDRB
-#define POWER_PORT PORTB
-#define POWER_NUMBER PB6
+#define POWER_ADD DDRC
+#define POWER_PORT PORTC
+#define POWER_NUMBER PC4
 
 void sleepNow(void);
 void getState(void);
