@@ -1,23 +1,22 @@
+#include <avr/io.h>
 #include <util/delay.h>
-#include <avr/sleep.h>
-#include "headers/buttons.h"
-#include "headers/ledMatrix.h"
 
-
-int main(void)
+#define LED_PORT PB1
+ 
+int main(void) 
 {
-	initLED();
-	initLEDTimer();
-	setupInterrupts();
+    DDRB |= (1 << LED_PORT);
     
-    sei();
-	
-	while(1)
-	{
-	}
-	return 0;
+    while (1)
+    {
+        PORTB ^= (1 << LED_PORT);
+        _delay_ms(250);
+        //~ PORTB &= ~(1 << LED_PORT);
+        //~ _delay_ms(400);
+    }
+ 
+    return (0);
 }
-
 
 
 
